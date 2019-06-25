@@ -1,0 +1,116 @@
+package com.codearms.maoqiqi.serialport;
+
+import android.util.Log;
+
+import com.codearms.maoqiqi.serialport.utils.LogUtils;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.Vector;
+
+/**
+ * 获取硬件地址的类
+ * Link: https://github.com/maoqiqi/AndroidSerialPort
+ * Author: fengqi.mao.march@gmail.com
+ * Date: 2019-06-13 14:56
+ */
+public class SerialPortFinder {
+
+    public class Driver {
+        public Driver(String name, String root) {
+            mDriverName = name;
+            mDeviceRoot = root;
+        }
+
+        private String mDriverName;
+        private String mDeviceRoot;
+        Vector<File> mDevices = null;
+
+        public Vector<File> getDevices() {
+            if (mDevices == null) {
+                mDevices = new Vector<File>();
+                File dev = new File("/dev");
+
+                File[] files = dev.listFiles();
+
+                if (files != null) {
+                    int i;
+                    for (i = 0; i < files.length; i++) {
+                        if (files[i].getAbsolutePath().startsWith(mDeviceRoot)) {
+                            Log.d(TAG, "Found new device: " + files[i]);
+                            mDevices.add(files[i]);
+                        }
+                    }
+                }
+            }
+            return mDevices;
+        }
+
+        public String getName() {
+            return mDriverName;
+        }
+    }
+
+    private static final String TAG = "SerialPort";
+
+    private Vector<Driver> mDrivers = null;
+
+    public Vector<Driver> getDrivers() throws IOException {
+        if (mDrivers == null) {
+            mDrivers = new Vector<>();
+            LineNumberReader r = new LineNumberReader(new FileReader("/proc/tty/drivers"));
+            String l;
+            while ((l = r.readLine()) != null) {
+                // Issue 3:
+                // Since driver name may contain spaces, we do not extract driver name with split()
+                String driverName = l.substring(0, 0x15).trim();
+                String[] w = l.split(" +");
+                if ((w.length >= 5) && (w[w.length - 1].equals("serial"))) {
+                    Log.d(TAG, "Found new driver " + driverName + " on " + w[w.length - 4]);
+                    mDrivers.add(new Driver(driverName, w[w.length - 4]));
+                }
+            }
+            r.close();
+        }
+        return mDrivers;
+    }
+
+    // 获取所有串口名称
+    public String[] getAllDevices() {
+        LogUtils.d(TAG, "获取所有串口名称");
+        Vector<String> devices = new Vector<>();
+        try {
+            // Parse each driver
+            for (Driver driver : getDrivers()) {
+                for (File file : driver.getDevices()) {
+                    String deviceName = file.getName();
+                    String value = String.format("%s (%s)", deviceName, driver.getName());
+                    devices.add(value);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return devices.toArray(new String[devices.size()]);
+    }
+
+    // 获取所有串口地址
+    public String[] getAllDevicesPath() {
+        LogUtils.d(TAG, "获取所有串口地址");
+        Vector<String> devices = new Vector<>();
+        try {
+            // Parse each driver
+            for (Driver driver : getDrivers()) {
+                for (File file : driver.getDevices()) {
+                    String device = file.getAbsolutePath();
+                    devices.add(device);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return devices.toArray(new String[devices.size()]);
+    }
+}

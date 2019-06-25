@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">SerialPort</string>
+
+    <string name="serial_port">串口设备:</string>
+    <string name="baud_rate">波特率:</string>
+    <string name="data_bits">数据位:</string>
+    <string name="stop_bits">停止位:</string>
+    <string name="parity">校验位:</string>
+
+    <string name="no_device">找不到串口设备</string>
+    <string name="open_serial_port">打开串口</string>
+    <string name="close_serial_port">关闭串口</string>
+    <string name="open_success">成功打开串口</string>
+    <string name="open_fail">打开串口失败</string>
+    <string name="input">输入需要发送的信息</string>
+    <string name="text">串口测试123(abc)!</string>
+    <string name="send">发送</string>
+
+    <string name="device_info">设备信息</string>
+</resources>
